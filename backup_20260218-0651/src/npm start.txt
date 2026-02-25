@@ -1,0 +1,35 @@
+TO DO LIST
+
+
+-Fix Export to CSV data format
+-Console for changing business name and logo
+-Add Handed to Courier command in the Actions column in Order Management page.
+-Add Decline Proof command in the Actions column in Order Management page.
+
+
+
+
+
+
+PAYMENT TERMS:
+Payment should be made within 48 hours upon checkout.
+
+PAYMENT METHODS:
+{Payment Method #1}
+Account Name: {Account Name}
+Account Number: {Account Number}
+
+{Payment Method #2}
+Account Name: {Account Name}
+Account Number: {Account Number}
+
+{Payment Method #3}
+Account Name: {Account Name}
+Account Number: {Account Number}
+
+etc...
+
+
+CANCELLATION OF ORDERS:
+{Insert Business Name} offers no cancellation of orders upon checkout. However, you can opt to cancel this order by not arranging a payment within 48 hours.
+

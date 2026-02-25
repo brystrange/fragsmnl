@@ -1,0 +1,9 @@
+TO DO LIST
+
+Increase stocks in Store page using the Edit Product modal > Total Stock. Whenever I increase the total stock number, the stocks in the Store page does not increase.
+
+Add customers the ability to view and edit their personal details such as their mobile number, email address, residential address
+
+Add My Orders page containing current and previous orders of each customers.
+
+Fix Export to CSV data format

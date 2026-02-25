@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <pre class="mermaid">
+flowchart TD
+    Start([Start: Customer Places Order]) --> Reserve[Reserve Stock]
+    Reserve --> CheckTime{Within 48hrs?}
+    
+    CheckTime -->|Yes| Checkout[Checkout]
+    CheckTime -->|No| Expire[Reservation Expires]
+    Expire --> ReturnStock[Return to Available Stock]
+    
+    Checkout --> PendingPay{Payment<br/>Processing}
+    
+    PendingPay -->|Proof Uploaded| Verify[Payment Verification]
+    PendingPay -->|No Proof<br/>After 48hrs| Cancel1[Cancel Order]
+    Cancel1 --> ReturnStock
+    
+    Verify --> VerifyResult{Verification<br/>Result}
+    VerifyResult -->|Verified| Process[Order Processing]
+    VerifyResult -->|Declined<br/>Attempt 1 or 2| ReUpload[Customer Re-uploads Proof]
+    ReUpload --> Verify
+    VerifyResult -->|Declined<br/>3rd Attempt| Cancel2[Cancel Order]
+    Cancel2 --> ReturnStock
+    
+    Process --> Ship[Handed to Courier]
+    Ship --> End([Order Complete<br/>Seller Role Ends])
+    
+    ReturnStock --> StockPool[(Available Stock)]
+    
+    style Start fill:#e1f5e1
+    style End fill:#e1f5e1
+    style Cancel1 fill:#ffe1e1
+    style Cancel2 fill:#ffe1e1
+    style Ship fill:#e1e5ff
+    style StockPool fill:#fff4e1
+    style ReUpload fill:#fff4e1
+    </pre>
+</body>
+</html>

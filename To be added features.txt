@@ -1,0 +1,149 @@
+
+GITHUB TOKEN
+(removed for security)
+
+
+Token (Classic)
+(removed for security)
+
+
+
+SETTINGS PAGE
+-Admin has the capability to change the duration to any hours they like. 48 hours is the current duration.
+-The duration is the time the reserved product will stay in the customer's profile. Once the duration ends, the reserved product will go back in stocks.
+-Each collection has no duration. It can stay in the website forever unless deleted by the admin.
+
+
+CUTOFF
+-Add a selection in the Settings page on which day the cutoff falls. The invoice will be created after each cutoff.
+-Provide automated invoice for each customer per cutoff. Invoice contains all the products reserved by the customers within the cycle.
+-Invoice to be seen by customer via their profile. Can be downloaded as PDF.
+
+
+ANALYTICS
+Provide daily, monthly, yearly, and per collections analytics. E.g. Total Sales, Total Products Reserved, Total Buyers. 
+
+
+
+
+--------------------
+
+
+ADD NEXT IN LINE FEATURE (admin/seller to contact customer for reminder)
+Add admin ability to cancel order
+Add Cancellation Reason column
+  - No payment
+  - Maximum attempts reached
+  - Customer request
+
+
+
+
+SETTINGS
+1. Invoice [DONE] more adjustments
+    - Contents
+    - Logo adding
+
+2. Payments [DONE]
+    - Uploading of QR code image
+    - Adding/editing of e-wallet and bank account name and number
+    - Enable/disable button for each payment account.
+
+3. Reporting Extracts
+    -Reservations Table
+    -Order Management Table
+
+4. Time Setups [DONE]
+    - Reservation Expiry - 48 hrs
+    - Payment wait time - 48 hrs
+
+
+
+Reservation Expiry - 48 hrs
+Payment wait time - 48 hrs
+
+
+
+
+Add a countdown when the 
+
+Add notification bell in customer profile
+
+
+
+
+Suggestions for Seller/Admin Improvements
+1. Add Order Status Management (Critical)
+Add an admin-side order status dropdown or action buttons in 
+OrderManagement.jsx
+ to transition orders: processing → shipped → delivered. This is the biggest gap — without it, orders get stuck at "processing" forever.
+
+2. Add "Mark as Shipped" with Tracking
+Combine the tracking info update with an automatic status change to shipped. Currently, the admin can add tracking info but the order status stays at processing.
+
+3. Add Admin Dashboard/Summary View
+Add order statistics to help the admin track:
+
+How many orders are awaiting payment
+How many are pending verification
+How many have been shipped but not delivered
+Revenue totals for completed orders
+
+4. Customer Notification System
+Implement notifications (email or in-app) for key events:
+
+Payment proof declined (with remaining attempt count)
+Payment verified
+Order shipped (with tracking number)
+Order about to be auto-cancelled (warning before the 48hr deadline)
+
+[DONE] 5. Fix Stock Field Inconsistency
+In 
+declineOrderPayment
+, change stock → availableStock when returning stock on the 3rd declined attempt, to match the field used everywhere else.
+
+6. Add Admin Manual Cancel
+Allow admin to manually cancel any order (with a reason) and automatically return stock. Currently, cancellation only happens via auto-expiry or 3 failed payment attempts.
+
+7. Align Flowchart with Actual Timers
+Update the flowchart to reflect the actual 5-minute reservation window instead of 48 hours, or decide if 48 hours is the desired behavior and update the code.
+
+8. Add Intermediate Hold Phase
+Before auto-cancelling at 48 hours, consider sending a reminder notification at, e.g., 24 hours, and updating order status to on_hold to give the customer one last chance.
+
+9. Add Order History/Audit Log
+Track all admin actions (verify, decline, ship, deliver) with timestamps for accountability and dispute resolution.
+
+10. Delivery Confirmation
+Consider adding a customer-side "Confirm Delivery" button that marks the order as delivered, or implement automatic delivery confirmation after a set period post-shipment.
+
+
+
+---------
+
+
+
+1. When internet connection is poor, order is checked out and is stuck in the "Processing..." state > Customer went to another page or refreshed the browser > Order proceeded and got checked out. However, when I checked the My Reservations page, the same order was there, meaning the order got duplicated. Prevent this from happening and create a process across the whole store and admin panel that when the internet connection is poor, actions will either proceed or not. Make sure stocks will always tally. Think of the stocks as money that cannot be copied, like a centralized bank.
+
+
+2. When experiencing internet connection issues, browser issues, database issues and other type of issue, I want the action to not proceed and redirect the users (whether admin or customer) back to the previous page/modal. 
+
+[PENDING] 3. Create a Customer ID stored in the database for every unique customers
+
+4. Add "Order Received" button from the customer's my-orders page. Possibly on the right side of See Order Details button.
+
+5. Migrate uploaded images and change image storage from base64 to Firebase Storage.
+
+6. Add loading state across all pages, containers, modals, when firebase data are still getting fetched. And a dash to input fields waiting to be filled.
+
+7. Provide the Firestore live production rules. The most secured rules you can think of.
+
+8. What can we do to minimize database read/write usage?
+
+9. I'm concerned about the cost of using Firebase, what can we do to lower down the cost? I'm expecting more or less 5k visitors per day as an aggresive forecast with a $50 budget per month. Would this suffice? Any free image storage you can think of?
+
+10. Duplicate "Reservation Expiring Soon" and "Reservation Expired" notifications.
+
+
+
+
