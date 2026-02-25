@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Trash2, ShoppingBag, X, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Clock, ShoppingBag, X, AlertCircle } from 'lucide-react';
 import { getTimeRemaining } from '../utils/timeHelpers';
 import StoreNavbar from './StoreNavbar';
 import { useNavigate } from 'react-router-dom';
 
 const MyReservations = ({ reservations, products, cancelReservation, logout, user, isAdmin, collections, notifications, markNotificationRead, markAllNotificationsRead, dataLoading }) => {
   const navigate = useNavigate();
+  // eslint-disable-next-line no-unused-vars
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {

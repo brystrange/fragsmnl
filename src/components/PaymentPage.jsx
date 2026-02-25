@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { QrCode, CreditCard, Download, Check, ArrowLeft, Copy, Upload, MapPin, User, Phone, Mail, Image, CheckCircle, Clock, AlertCircle, XCircle, AlertTriangle, Send, X, Eye } from 'lucide-react';
+import { CreditCard, Download, Check, ArrowLeft, Copy, Upload, MapPin, User, Phone, Mail, Image, CheckCircle, Clock, AlertCircle, XCircle, AlertTriangle, Send, X, Eye } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import StoreNavbar from './StoreNavbar';
 import { generateInvoicePDF } from '../utils/generateInvoicePDF';

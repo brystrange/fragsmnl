@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Download, Eye, FileText, CheckCircle, XCircle, Clock, AlertCircle, MapPin, User, Phone, Mail, Image, Check, DollarSign, Package, ZoomIn, ZoomOut, Truck, Edit2, Save, X as XIcon, Ban } from 'lucide-react';
+import { Search, Download, Eye, FileText, CheckCircle, XCircle, Clock, AlertCircle, MapPin, User, Phone, Image, Check, DollarSign, Package, ZoomIn, ZoomOut, Truck, Edit2, Save, X as XIcon, Ban } from 'lucide-react';
 import { generateInvoicePDF } from '../utils/generateInvoicePDF';
 import { useModalScrollLock } from '../hooks/useModalScrollLock';
 

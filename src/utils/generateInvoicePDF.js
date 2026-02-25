@@ -18,12 +18,8 @@ export const generateInvoicePDF = (order, { invoiceSettings = {}, paymentSetting
 
     const businessName = invoiceSettings.businessName || 'My Shop';
     const tagline = invoiceSettings.businessTagline || '';
-    const address = invoiceSettings.businessAddress || '';
-    const contact = invoiceSettings.contactNumber || '';
-    const social = invoiceSettings.socialMedia || '';
     const terms = invoiceSettings.termsAndConditions || '';
     const cancellation = invoiceSettings.cancellationPolicy || '';
-    const paymentWaitHours = timeSettings.paymentWaitHours || 48;
 
     // Currency formatter – no symbol, comma-separated, 2 decimals
     const fmt = (n) => n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, Clock, LogOut, Search, SlidersHorizontal, X, Menu, ChevronDown, ChevronUp, User, ArrowLeft, FileText, CreditCard, Bell, CheckCircle, AlertTriangle, Truck, XCircle, Ban, Timer } from 'lucide-react';
+import { ShoppingBag, Clock, LogOut, Search, SlidersHorizontal, X, Menu, ChevronDown, ChevronUp, User, ArrowLeft, FileText, Bell, CheckCircle, AlertTriangle, Truck, XCircle, Ban, Timer } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const StoreNavbar = ({
