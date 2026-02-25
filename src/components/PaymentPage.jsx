@@ -90,7 +90,7 @@ const PaymentPage = ({ orders, paymentSettings, user, logout, isAdmin, collectio
     setUploadError(null);
 
     try {
-      const success = await updateOrderPaymentProof(orderId, previewImage);
+      const success = await updateOrderPaymentProof(orderId, previewFile);
       setUploading(false);
       if (success) {
         setPreviewImage(null);

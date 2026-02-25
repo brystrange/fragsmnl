@@ -121,7 +121,7 @@ const MyOrders = ({ user, orders, products, logout, isAdmin, collections, reserv
         setUploading(true);
         setUploadError(null);
         try {
-            const success = await updateOrderPaymentProof(previewOrderId, previewImage);
+            const success = await updateOrderPaymentProof(previewOrderId, previewFile);
             if (success) {
                 setPreviewImage(null);
                 setPreviewFile(null);

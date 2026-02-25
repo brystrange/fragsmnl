@@ -13,8 +13,9 @@ import MyAccount from './components/MyAccount';
 import MyOrders from './components/MyOrders';
 import { useReservations } from './hooks/useReservations';
 import { getReservationExpiration } from './utils/timeHelpers';
-import { auth, db } from './config/firebase';
+import { auth, db, storage } from './config/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   collection,
   addDoc,
@@ -28,7 +29,8 @@ import {
   where,
   getDocs,
   getDoc,
-  setDoc
+  setDoc,
+  limit
 } from 'firebase/firestore';
 
 // Wrapper components
@@ -321,9 +323,17 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // Real-time reservations listener
+  // Real-time reservations listener — scoped to current user for non-admins
   useEffect(() => {
-    const q = query(collection(db, 'reservations'), orderBy('reservedAt', 'desc'));
+    if (!user) {
+      setDataLoading(prev => ({ ...prev, reservations: false }));
+      return;
+    }
+
+    const reservationsRef = collection(db, 'reservations');
+    const q = isAdmin
+      ? query(reservationsRef, orderBy('reservedAt', 'desc'))
+      : query(reservationsRef, where('userId', '==', user.id), orderBy('reservedAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const reservationsData = snapshot.docs.map(doc => ({
@@ -339,7 +349,7 @@ const App = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user, isAdmin]);
 
   // Real-time orders listener
   useEffect(() => {
@@ -352,7 +362,9 @@ const App = () => {
     setDataLoading(prev => ({ ...prev, orders: true }));
 
     const ordersRef = collection(db, 'orders');
-    const ordersQuery = query(ordersRef, orderBy('createdAt', 'desc'));
+    const ordersQuery = isAdmin
+      ? query(ordersRef, orderBy('createdAt', 'desc'))
+      : query(ordersRef, where('userId', '==', user.id), orderBy('createdAt', 'desc'));
     const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -367,7 +379,7 @@ const App = () => {
     });
 
     return () => unsubOrders();
-  }, [user]);
+  }, [user, isAdmin]);
 
   // Load payment settings
   useEffect(() => {
@@ -386,25 +398,45 @@ const App = () => {
     return () => unsubSettings();
   }, []);
 
-  // Load time settings
+  // Load time settings — real-time for admin, one-time fetch for regular users
   useEffect(() => {
-    const settingsRef = doc(db, 'settings', 'timeSettings');
-    const unsubTimeSettings = onSnapshot(settingsRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setTimeSettings(prev => ({ ...prev, ...docSnap.data() }));
-      }
-      setDataLoading(prev => ({ ...prev, timeSettings: false }));
-    }, (error) => {
-      console.error('Error listening to time settings:', error);
-      showToast('Failed to load time settings. Please check your connection.', 'error');
-      setDataLoading(prev => ({ ...prev, timeSettings: false }));
-    });
+    if (isAdmin) {
+      const settingsRef = doc(db, 'settings', 'timeSettings');
+      const unsubTimeSettings = onSnapshot(settingsRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setTimeSettings(prev => ({ ...prev, ...docSnap.data() }));
+        }
+        setDataLoading(prev => ({ ...prev, timeSettings: false }));
+      }, (error) => {
+        console.error('Error listening to time settings:', error);
+        showToast('Failed to load time settings. Please check your connection.', 'error');
+        setDataLoading(prev => ({ ...prev, timeSettings: false }));
+      });
+      return () => unsubTimeSettings();
+    } else {
+      // Regular users: one-time fetch
+      const fetchTimeSettings = async () => {
+        try {
+          const docSnap = await getDoc(doc(db, 'settings', 'timeSettings'));
+          if (docSnap.exists()) {
+            setTimeSettings(prev => ({ ...prev, ...docSnap.data() }));
+          }
+        } catch (error) {
+          console.error('Error fetching time settings:', error);
+        }
+        setDataLoading(prev => ({ ...prev, timeSettings: false }));
+      };
+      fetchTimeSettings();
+    }
+  }, [isAdmin]);
 
-    return () => unsubTimeSettings();
-  }, []);
-
-  // Load invoice settings
+  // Load invoice settings — admin-only (regular users don't need these)
   useEffect(() => {
+    if (!isAdmin) {
+      setDataLoading(prev => ({ ...prev, invoiceSettings: false }));
+      return;
+    }
+
     const settingsRef = doc(db, 'settings', 'invoiceSettings');
     const unsubInvoiceSettings = onSnapshot(settingsRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -418,7 +450,7 @@ const App = () => {
     });
 
     return () => unsubInvoiceSettings();
-  }, []);
+  }, [isAdmin]);
 
   // Listen for notifications for the current user
   useEffect(() => {
@@ -430,7 +462,8 @@ const App = () => {
     const q = query(
       collection(db, 'notifications'),
       where('userId', '==', user.id),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
+      limit(50)
     );
 
     const unsubNotifications = onSnapshot(q, (snapshot) => {
@@ -570,7 +603,7 @@ const App = () => {
     };
 
     checkExpiringReservations();
-    const interval = setInterval(checkExpiringReservations, 10000);
+    const interval = setInterval(checkExpiringReservations, 30000);
 
     return () => clearInterval(interval);
   }, [reservations, products, timeSettings]);
@@ -1126,8 +1159,8 @@ const App = () => {
     }
   };
 
-  // Update payment proof
-  const updateOrderPaymentProof = async (orderId, proofUrl) => {
+  // Update payment proof — uploads image to Firebase Storage instead of base64 in Firestore
+  const updateOrderPaymentProof = async (orderId, proofFileOrUrl) => {
     if (!checkOnline()) return false;
     try {
       const orderRef = doc(db, 'orders', orderId);
@@ -1142,6 +1175,16 @@ const App = () => {
       if (newAttemptNumber > 3) {
         showToast('Maximum payment attempts reached. Order has been cancelled.', 'error');
         return false;
+      }
+
+      // Upload to Firebase Storage if it's a File object; otherwise use the URL directly
+      let proofUrl;
+      if (proofFileOrUrl instanceof File) {
+        const storageRef = ref(storage, `payment-proofs/${orderId}/attempt-${newAttemptNumber}-${Date.now()}`);
+        await uploadBytes(storageRef, proofFileOrUrl);
+        proofUrl = await getDownloadURL(storageRef);
+      } else {
+        proofUrl = proofFileOrUrl;
       }
 
       // Create new attempt record
