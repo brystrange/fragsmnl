@@ -169,6 +169,11 @@ const App = () => {
   // Store frozen expiration times
   const frozenTimesRef = useRef({});
 
+  // Track IDs that have already been notified to prevent duplicates from race conditions
+  const notifiedReservationWarningsRef = useRef(new Set());
+  const notifiedOrderWarningsRef = useRef(new Set());
+  const notifiedExpiredReservationsRef = useRef(new Set());
+
   // Toast notification function
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -496,7 +501,9 @@ const App = () => {
             await cancelExpiredOrder(order);
           }
           // If order is older than half the wait time, send warning (once)
-          else if (orderCreatedAt < warningTimeAgo && !order.cancelWarningNotified) {
+          else if (orderCreatedAt < warningTimeAgo && !order.cancelWarningNotified
+            && !notifiedOrderWarningsRef.current.has(order.id)) {
+            notifiedOrderWarningsRef.current.add(order.id);
             const remainingHours = waitHours - warningHours;
             await addNotification(order.userId, {
               type: 'order_cancel_warning',
@@ -527,7 +534,8 @@ const App = () => {
       const expiryMinutes = timeSettings.reservationExpiryMinutes || 5;
 
       for (const reservation of reservations) {
-        if (reservation.status !== 'active' || reservation.expiryWarningNotified || reservation.frozenRemainingMs) continue;
+        if (reservation.status !== 'active' || reservation.expiryWarningNotified || reservation.frozenRemainingMs
+          || notifiedReservationWarningsRef.current.has(reservation.id)) continue;
 
         const expiresAt = new Date(reservation.expiresAt);
         const reservedAt = new Date(reservation.reservedAt);
@@ -546,6 +554,7 @@ const App = () => {
           const product = products.find(p => p.id === reservation.productId);
           const productName = product?.name || 'an item';
 
+          notifiedReservationWarningsRef.current.add(reservation.id);
           await addNotification(reservation.userId, {
             type: 'reservation_expiry_warning',
             title: 'Reservation Expiring Soon',
@@ -968,6 +977,10 @@ const App = () => {
   const expireReservation = async (reservationId) => {
     const reservation = reservations.find(r => r.id === reservationId);
     if (!reservation) return;
+
+    // Skip if already being processed (prevents duplicate notifications from rapid interval ticks)
+    if (notifiedExpiredReservationsRef.current.has(reservationId)) return;
+    notifiedExpiredReservationsRef.current.add(reservationId);
 
     try {
       await updateDoc(doc(db, 'reservations', reservationId), {
