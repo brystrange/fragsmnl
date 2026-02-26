@@ -430,26 +430,35 @@ const App = () => {
     }
   }, [isAdmin]);
 
-  // Load invoice settings — admin-only (regular users don't need these)
+  // Load invoice settings — real-time for admin, one-time fetch for regular users
   useEffect(() => {
-    if (!isAdmin) {
-      setDataLoading(prev => ({ ...prev, invoiceSettings: false }));
-      return;
+    if (isAdmin) {
+      const settingsRef = doc(db, 'settings', 'invoiceSettings');
+      const unsubInvoiceSettings = onSnapshot(settingsRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setInvoiceSettings(docSnap.data());
+        }
+        setDataLoading(prev => ({ ...prev, invoiceSettings: false }));
+      }, (error) => {
+        console.error('Error listening to invoice settings:', error);
+        setDataLoading(prev => ({ ...prev, invoiceSettings: false }));
+      });
+      return () => unsubInvoiceSettings();
+    } else {
+      // Regular users: one-time fetch (needed for invoice PDF generation)
+      const fetchInvoiceSettings = async () => {
+        try {
+          const docSnap = await getDoc(doc(db, 'settings', 'invoiceSettings'));
+          if (docSnap.exists()) {
+            setInvoiceSettings(docSnap.data());
+          }
+        } catch (error) {
+          console.error('Error fetching invoice settings:', error);
+        }
+        setDataLoading(prev => ({ ...prev, invoiceSettings: false }));
+      };
+      fetchInvoiceSettings();
     }
-
-    const settingsRef = doc(db, 'settings', 'invoiceSettings');
-    const unsubInvoiceSettings = onSnapshot(settingsRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setInvoiceSettings(docSnap.data());
-      }
-      setDataLoading(prev => ({ ...prev, invoiceSettings: false }));
-    }, (error) => {
-      console.error('Error listening to invoice settings:', error);
-      showToast('Failed to load invoice settings. Please check your connection.', 'error');
-      setDataLoading(prev => ({ ...prev, invoiceSettings: false }));
-    });
-
-    return () => unsubInvoiceSettings();
   }, [isAdmin]);
 
   // Listen for notifications for the current user
